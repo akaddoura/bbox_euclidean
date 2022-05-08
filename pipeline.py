@@ -9,57 +9,6 @@ from scipy.spatial import distance
 
 np.set_printoptions(threshold=sys.maxsize)
 
-''' Useful Functions '''
-# - Start - #
-
-def weighted_img(img, initial_img, α=0.5, β=1, γ=1):
-    return cv2.addWeighted(initial_img, α, img, β, γ)
-
-def nothing(x):
-    pass
-
-def display_images(images, c=4, r=4):
-    w = 20
-    h = 20
-    fig = plt.figure(figsize=(100, 100))
-    columns = c
-    rows = r
-
-    for i in range(1, len(images) + 1):
-        img = images[i - 1]
-        fig.add_subplot(rows, columns, i)
-        plt.imshow(img, cmap=plt.cm.gray)
-    plt.show()
-
-def call_with_trackbars(parameters, variables, callback):
-    cv2.namedWindow('Variables', cv2.WINDOW_NORMAL)
-
-    for variable in variables:
-        cv2.createTrackbar(variable['name'], 'Variables', variable['default'], variable['max'], nothing)
-
-    cv2.resizeWindow('Variables', 500, 200)
-    cv2.moveWindow('Variables', 0, 500)  # Doesn't work on macOS at the moment due to a bug in OpenCV (https://github.com/opencv/opencv/issues/16343)
-
-    values = {}
-    last_values = None
-    while (1):
-        # Break when the "Escape" key is pressed.
-        k = cv2.waitKey(1) & 0xFF
-        if k == 27:
-            break
-
-        for variable in variables:
-            values[variable['name']] = cv2.getTrackbarPos(variable['name'], 'Variables')
-
-        if (values == last_values):
-            continue
-        last_values = values.copy()
-
-        print(values)
-        callback({**parameters, **values})
-
-# - End - #
-
 # - Start - #
 def pipeline(img):
 
@@ -79,12 +28,10 @@ def pipeline(img):
         approx = cv2.approxPolyDP(i, 0.01 * perimeter, True)
         bound_box = cv2.boundingRect(approx) # returns [x,y,w,h]
         box_area = bound_box[2] * bound_box[3]
-        #print("box:", box_area)
         if box_area > 20000:
             boxes_list.append(bound_box)
             color = (rng.randint(0, 256), rng.randint(0, 256), rng.randint(0, 256))
             # cv2.rectangle(img, bound_box, color=color, thickness=2)
-
     
     if len(boxes_list) == 2:
         box1 = boxes_list[0]
@@ -126,20 +73,6 @@ def main():
             output_video = input_video.fl_image(pipeline)
             output_video_name = "output_videos\\{}_processed.mp4".format(filename[:-4])
             output_video.write_videofile(output_video_name)
-            
-
-    ''' Trackbar parameters'''
-    variables = [
-        {
-            'name': 'tLow',
-            'default': 0,
-            'max': 255
-        },
-    ]
-
-    # launch trackbars callback function
-    #cv2.destroyAllWindows()
-    #call_with_trackbars({ 'img': img }, variables, prototypeAlg)
     
     # End main()
 
